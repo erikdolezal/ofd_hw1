@@ -22,7 +22,7 @@ class RecursiveEstimator:
         
         self.P = np.eye(self.theta.shape[0]) * 1000.0
 
-    def update(self, u, y):
+    def update(self, u, y, use_posterior=False):
         if self.model == "ARX":
             z = np.concatenate((-self.y_hist, [u], self.u_hist))
         elif self.model == "OE":
@@ -47,10 +47,13 @@ class RecursiveEstimator:
         self.u_hist[0] = u
         
         self.y_pred_hist = np.roll(self.y_pred_hist, 1)
-        self.y_pred_hist[0] = z @ self.theta
-        
+        if use_posterior:
+            self.y_pred_hist[0] = z @ self.theta
+        else:
+            self.y_pred_hist[0] = y_pred
+
         self.e_hist = np.roll(self.e_hist, 1)
-        self.e_hist[0] = y - (z @ self.theta)
+        self.e_hist[0] = y - self.y_pred_hist[0]
 
         if self.model in ['ARX', 'OE']:
             self.a = self.theta[:self.dim]
@@ -62,18 +65,27 @@ class RecursiveEstimator:
 
         return self.y_pred_hist[0]
 
-    def run_batch(self, u_arr, y_arr):
+    def run_batch(self, u_arr, y_arr, use_posterior=False):
         theta_history = np.zeros((y_arr.shape[0], self.theta.shape[0]))
+        a_history = np.zeros((y_arr.shape[0], self.a.shape[0]))
+        b_history = np.zeros((y_arr.shape[0], self.b.shape[0]))
+        c_history = np.zeros((y_arr.shape[0], self.c.shape[0])) if self.model not in ['ARX', 'OE'] else None
         theta_cov_history = np.zeros((y_arr.shape[0], self.theta.shape[0], self.theta.shape[0]))
         y_pred = np.zeros_like(y_arr)
 
         for i in tqdm(range(len(y_arr)), f"Recursive batch {self.model} model parameters estimation"):
-            y_pred[i] = self.update(u_arr[i], y_arr[i])
+            y_pred[i] = self.update(u_arr[i], y_arr[i], use_posterior=use_posterior)
+            a_history[i], b_history[i] = self.a.copy(), self.b.copy()
+            if c_history is not None:
+                c_history[i] = self.c.copy()
             theta_history[i], theta_cov_history[i] = self.theta.copy(), self.P.copy()
 
         return {
             "theta": theta_history,
             "P": theta_cov_history,
             "y_pred": y_pred,
+            "a": a_history,
+            "b": b_history,
+            "c": c_history,
         }
 

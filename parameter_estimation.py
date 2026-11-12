@@ -68,39 +68,28 @@ plt.show()
 
 # %%
 from recursive_estim import RecursiveEstimator
+from plot_results import plot_estimation_results
+
 
 arx_estimator = RecursiveEstimator(model='ARX', dim=2)
-arx_est_res = arx_estimator.run_batch(u, y_arx)
+armax_estimator = RecursiveEstimator(model='ARMAX', dim=2)
+oe_estimator = RecursiveEstimator(model='OE', dim=2)
+for estimator in [arx_estimator, armax_estimator, oe_estimator]:
+    plot_estimation_results(estimator, u, y_arx, iterations=3, use_posterior=True, a_true=a, b_true=b)
 
-fig, ax = plt.subplots(3, 1, figsize=(10, 8))
-ax[0].plot(y_arx, label='ARX Output', color='blue')
-ax[0].plot(arx_est_res['y_pred'], label='ARX Predicted Output', color='green', linestyle='--')
-ax[0].legend()
-ax[0].grid()
-ax[0].set_title('ARX Model Output vs Predicted')
-ax[0].set_xlabel('Sample')
-ax[0].set_ylabel('Output')
-for i in range(arx_estimator.dim):
-    ax[1].plot((1 + i) * np.ones_like(arx_est_res['theta'][:, i]), arx_est_res['theta'][:, i], ".", markersize=1)
-    if i < len(a)-1:
-        ax[1].plot([1 + i], a[i+1], "o", label=f'True a[{i+1}]', markersize=5)
+arx_estimator = RecursiveEstimator(model='ARX', dim=3)
+armax_estimator = RecursiveEstimator(model='ARMAX', dim=3)
+oe_estimator = RecursiveEstimator(model='OE', dim=3)
+for estimator in [arx_estimator, armax_estimator, oe_estimator]:
+    plot_estimation_results(estimator, u, y_arx, iterations=3, use_posterior=True, a_true=a, b_true=b)
 
-ax[1].set_title('ARX Model Parameter a Estimation')
-ax[1].set_xlabel('a Parameter Index')
-ax[1].set_ylabel('Estimated Value')
-ax[1].legend()
-ax[1].grid()
-for i in range(arx_estimator.dim + 1):
-    ax[2].plot((1 + i) * np.ones_like(arx_est_res['theta'][:, arx_estimator.dim + i]), arx_est_res['theta'][:, arx_estimator.dim + i], ".", markersize=1)
-    if i < len(b):
-        ax[2].plot([1 + i], b[i], "o", label=f'True b[{i}]', markersize=5)
-ax[2].set_title('ARX Model Parameter b Estimation')
-ax[2].set_xlabel('b Parameter Index')
-ax[2].set_ylabel('Estimated Value')
-ax[2].legend()
-ax[2].grid()
-plt.tight_layout()
-plt.show()
+# %%
+
+arx_estimator = RecursiveEstimator(model='ARX', dim=3)
+armax_estimator = RecursiveEstimator(model='ARMAX', dim=3)
+oe_estimator = RecursiveEstimator(model='OE', dim=3)
+for estimator in [arx_estimator, armax_estimator, oe_estimator]:
+    plot_estimation_results(estimator, u, y_oe, iterations=3, use_posterior=True, a_true=a, b_true=b)
 
 
 # %%
