@@ -6,11 +6,21 @@ class RecursiveEstimator:
         self.model = model
         self.dim = dim
         
-        self.a = a_init if (a_init is not None and a_init.shape[0] == dim) else np.zeros(dim)
-        self.b = b_init if (b_init is not None and b_init.shape[0] == dim+1) else np.zeros(dim+1)
-        self.c = c_init if (c_init is not None and c_init.shape[0] == dim) else np.zeros(dim)
+        # Store the initial values so they can be reused upon reset
+        self._a_init = a_init
+        self._b_init = b_init
+        self._c_init = c_init
         
-        if model in ['ARX', 'OE']:
+        # Initialize the state
+        self.reset()
+
+    def reset(self):
+        """Resets the estimator parameters and history arrays to their initial states."""
+        self.a = self._a_init.copy() if (self._a_init is not None and self._a_init.shape[0] == self.dim) else np.zeros(self.dim)
+        self.b = self._b_init.copy() if (self._b_init is not None and self._b_init.shape[0] == self.dim+1) else np.zeros(self.dim+1)
+        self.c = self._c_init.copy() if (self._c_init is not None and self._c_init.shape[0] == self.dim) else np.zeros(self.dim)
+        
+        if self.model in ['ARX', 'OE']:
             self.theta = np.concatenate((self.a, self.b))
         else:
             self.theta = np.concatenate((self.a, self.b, self.c))
@@ -20,7 +30,7 @@ class RecursiveEstimator:
         self.u_hist = np.zeros(self.dim)
         self.e_hist = np.zeros(self.dim)
         
-        self.P = np.eye(self.theta.shape[0]) * 1000.0
+        self.P = np.eye(self.theta.shape[0]) * 100.0
 
     def update(self, u, y, use_posterior=False):
         if self.model == "ARX":
@@ -79,7 +89,7 @@ class RecursiveEstimator:
             if c_history is not None:
                 c_history[i] = self.c.copy()
             theta_history[i], theta_cov_history[i] = self.theta.copy(), self.P.copy()
-
+        self.reset()
         return {
             "theta": theta_history,
             "P": theta_cov_history,
@@ -88,4 +98,3 @@ class RecursiveEstimator:
             "b": b_history,
             "c": c_history,
         }
-
