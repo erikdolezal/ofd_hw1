@@ -47,7 +47,7 @@ def plot_estimation_results(estimator, u_arr, y_arr, iterations=1, use_posterior
         return 0.25 + 0.75 * (it / (n_iters - 1))
 
     # 1. Output Plot
-    ax[0].plot(x_axis, y_arr, label='True Output', color='blue', alpha=0.3, linewidth=3)
+    ax[0].plot(x_axis, y_arr, label='True Output', color='blue')
     for it, res in enumerate(results):
         lbl = f'{model} Pred' if n_iters == 1 else f'{model} Pred (It {it+1})'
         ax[0].plot(x_axis, res['y_pred'], label=lbl, color='green', alpha=get_alpha(it))
