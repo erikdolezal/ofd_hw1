@@ -14,23 +14,24 @@ class RecursiveEstimator:
         # Initialize the state
         self.reset()
 
-    def reset(self):
+    def reset(self, reset_params=True):
         """Resets the estimator parameters and history arrays to their initial states."""
-        self.a = self._a_init.copy() if (self._a_init is not None and self._a_init.shape[0] == self.dim) else np.zeros(self.dim)
-        self.b = self._b_init.copy() if (self._b_init is not None and self._b_init.shape[0] == self.dim+1) else np.zeros(self.dim+1)
-        self.c = self._c_init.copy() if (self._c_init is not None and self._c_init.shape[0] == self.dim) else np.zeros(self.dim)
-        
-        if self.model in ['ARX', 'OE']:
-            self.theta = np.concatenate((self.a, self.b))
-        else:
-            self.theta = np.concatenate((self.a, self.b, self.c))
+        if reset_params:
+            self.a = self._a_init.copy() if (self._a_init is not None and self._a_init.shape[0] == self.dim) else np.zeros(self.dim)
+            self.b = self._b_init.copy() if (self._b_init is not None and self._b_init.shape[0] == self.dim+1) else np.zeros(self.dim+1)
+            self.c = self._c_init.copy() if (self._c_init is not None and self._c_init.shape[0] == self.dim) else np.zeros(self.dim)
+            
+            if self.model in ['ARX', 'OE']:
+                self.theta = np.concatenate((self.a, self.b))
+            else:
+                self.theta = np.concatenate((self.a, self.b, self.c))
+            self.P = np.eye(self.theta.shape[0]) * 100.0
 
         self.y_hist = np.zeros(self.dim)
         self.y_pred_hist = np.zeros(self.dim)
         self.u_hist = np.zeros(self.dim)
         self.e_hist = np.zeros(self.dim)
         
-        self.P = np.eye(self.theta.shape[0]) * 100.0
 
     def update(self, u, y, use_posterior=False):
         if self.model == "ARX":
@@ -75,7 +76,7 @@ class RecursiveEstimator:
 
         return self.y_pred_hist[0]
 
-    def run_batch(self, u_arr, y_arr, use_posterior=False):
+    def run_batch(self, u_arr, y_arr, use_posterior=False, reset_params=True):
         theta_history = np.zeros((y_arr.shape[0], self.theta.shape[0]))
         a_history = np.zeros((y_arr.shape[0], self.a.shape[0]))
         b_history = np.zeros((y_arr.shape[0], self.b.shape[0]))
@@ -89,7 +90,7 @@ class RecursiveEstimator:
             if c_history is not None:
                 c_history[i] = self.c.copy()
             theta_history[i], theta_cov_history[i] = self.theta.copy(), self.P.copy()
-        self.reset()
+        self.reset(reset_params)
         return {
             "theta": theta_history,
             "P": theta_cov_history,

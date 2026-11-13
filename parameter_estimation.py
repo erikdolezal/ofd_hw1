@@ -238,7 +238,21 @@ plot_multiple_model_results({"Prior":armax_est_oe_low_freq_results,
 plot_multiple_model_results({"Prior":armax_est_oe_white_noise_results,
                              "Posterior": armax_post_est_oe_white_noise_results}, model_name="ARMAX", a_true=a, b_true=b, c_true=a, filename="armax_post_white_oe_convergence.pdf")
 
+#%%
+oe_iterative_oe_low_results = {}
+for i in range(3):
+    oe_iterative_oe_low_results[f"Pass {i+1}"] = oe_estimator.run_batch(u_low_freq[:5000], y_oe_low[:5000], reset_params=False)
+oe_estimator.reset()
 
+plot_multiple_model_results(oe_iterative_oe_low_results, model_name="OE", a_true=a, b_true=b, c_true=None, filename="oe_iterative_oe_low.pdf")
+
+#%%
+armax_iterative_oe_low_results = {}
+for i in range(3):
+    armax_iterative_oe_low_results[f"Pass {i+1}"] = arxmax_estimator.run_batch(u_low_freq[:5000], y_oe_low[:5000], reset_params=False)
+arxmax_estimator.reset()
+
+plot_multiple_model_results(armax_iterative_oe_low_results, model_name="ARMAX", a_true=a, b_true=b, c_true=a, filename="armax_iterative_oe_low.pdf")
 
 #%%
 N = 1000
